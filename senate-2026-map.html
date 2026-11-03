@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>2026 Senate Map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light dark;
+  --page:#f1f4f7; --card:#ffffff; --ink:#14202b; --muted:#566574; --line:#cfd8e0;
+  --none:#dde2e7; --und:#eadfc0; --blue:#24589f; --red:#b3302a;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#0f151b; --card:#18212a; --ink:#eef2f5; --muted:#9aa8b5; --line:#2c3844;
+    --none:#252e37; --und:#5b5339; --blue:#78a9ea; --red:#f08174;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0f151b; --card:#18212a; --ink:#eef2f5; --muted:#9aa8b5; --line:#2c3844;
+  --none:#252e37; --und:#5b5339; --blue:#78a9ea; --red:#f08174;
+}
+*,*::before,*::after{ box-sizing:inherit; }
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font:16px/1.45 "Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{ max-width:720px; margin:0 auto; padding:18px 14px 36px; }
+h1{ font:700 32px/1.05 "Barlow Condensed","Arial Narrow",system-ui,sans-serif; margin:0 0 6px; letter-spacing:.2px; }
+.lede{ margin:0 0 14px; color:var(--muted); max-width:60ch; }
+button{ font:inherit; color:inherit; touch-action:manipulation; cursor:pointer; }
+:focus-visible{ outline:3px solid var(--ink); outline-offset:2px; }
+.card{ background:var(--card); border:1px solid var(--line); border-radius:10px; }
+
+/* scoreboard */
+.board{ padding:12px 14px 14px; }
+.scores{ display:flex; justify-content:space-between; align-items:flex-end; }
+.score{ display:flex; align-items:baseline; gap:8px; }
+.score.r{ flex-direction:row-reverse; }
+.score .n{ font:700 58px/.88 "Barlow Condensed","Arial Narrow",system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+.score.d .n{ color:var(--blue); }
+.score.r .n{ color:var(--red); }
+.score .who{ font-weight:600; color:var(--muted); }
+.barwrap{ position:relative; margin:12px 0 0; }
+.bar{ display:flex; height:14px; border-radius:7px; overflow:hidden; background:var(--und); }
+.bar i{ display:block; height:100%; transition:width .25s ease; }
+.bar .bd{ background:#24589f; }
+.bar .bu{ background:var(--und); }
+.bar .br{ background:#b3302a; }
+.tick{ position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; margin-left:-1px; background:var(--ink); border-radius:1px; }
+.ctl{ margin:12px 0 0; font-weight:600; font-size:17px; }
+.ctl2{ margin:2px 0 0; color:var(--muted); font-size:14px; min-height:1.4em; }
+
+/* map */
+.mapcard{ margin-top:12px; padding:6px; }
+#map{ position:relative; width:100%; }
+.datamap{ display:block; max-width:100%; }
+.lab text{ font-family:"Barlow","Arial Narrow",system-ui,sans-serif; font-weight:600; text-anchor:middle; pointer-events:none; user-select:none; -webkit-user-select:none; }
+.lab .ne{ cursor:pointer; }
+.note{ margin:8px; color:var(--muted); font-size:14px; }
+
+/* rating panel */
+.panel{ margin-top:12px; padding:14px; }
+.panel h2{ font:700 26px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif; margin:0; }
+.meta{ margin:3px 0 0; color:var(--muted); font-size:15px; min-height:1.45em; }
+.rates{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:12px; }
+.rate{
+  min-height:46px; border:2px solid transparent; border-radius:8px; font-weight:600; font-size:15px; padding:4px 2px;
+}
+.rate[disabled]{ opacity:.45; cursor:default; }
+.rate[aria-pressed="true"]{ border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
+.acts{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.btn{
+  min-height:44px; padding:6px 14px; border-radius:8px; border:1px solid var(--line);
+  background:transparent; font-weight:600;
+}
+.btn.primary{ background:var(--ink); color:var(--card); border-color:var(--ink); }
+.btn[disabled]{ opacity:.45; cursor:default; }
+
+/* counts */
+.counts{ margin-top:12px; padding:12px 14px; display:grid; grid-template-columns:44px repeat(4,1fr); gap:6px; align-items:center; }
+.counts .h{ font-size:13px; color:var(--muted); text-align:center; font-weight:500; }
+.counts .rl{ font-weight:600; font-size:14px; }
+.cell{ border-radius:7px; min-height:36px; display:flex; align-items:center; justify-content:center; font:700 20px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif; }
+
+/* state list */
+.listcard{ margin-top:12px; padding:14px; }
+.listcard h3{ margin:0 0 4px; font:700 22px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif; }
+.listcard p{ margin:0 0 10px; color:var(--muted); font-size:14px; }
+.chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.chip{
+  min-width:46px; min-height:40px; padding:4px 8px; border-radius:8px; border:2px solid var(--line);
+  background:var(--und); font-weight:600; font-size:15px;
+}
+.chip.locked{ border-style:dashed; border-color:var(--muted); }
+.chip[aria-pressed="true"]{ border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
+.foot{ margin:14px 2px 0; color:var(--muted); font-size:13.5px; max-width:64ch; }
+.foot p{ margin:0 0 8px; }
+.reset{ margin-top:6px; }
+
+@media (prefers-reduced-motion: reduce){ .bar i{ transition:none; } }
+@media (min-width:560px){
+  .score .n{ font-size:72px; }
+  h1{ font-size:40px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>2026 Senate map</h1>
+  <p class="lede">Tap a state, pick a rating, and watch the Senate count move. 35 seats are on the ballot on Nov. 3, 2026, including special elections in Ohio and Florida. 18 states are already locked in as Safe, so you only rate the other 17.</p>
+
+  <section class="card board" aria-label="Senate count">
+    <div class="scores">
+      <div class="score d"><span class="n" id="dN">34</span><span class="who">Democrats</span></div>
+      <div class="score r"><span class="n" id="rN">31</span><span class="who">Republicans</span></div>
+    </div>
+    <div class="barwrap">
+      <div class="bar" aria-hidden="true"><i class="bd" id="barD"></i><i class="bu" id="barU"></i><i class="br" id="barR"></i></div>
+      <span class="tick" aria-hidden="true"></span>
+    </div>
+    <p class="ctl" id="ctl" role="status">Control is still open on your map</p>
+    <p class="ctl2" id="ctl2"></p>
+  </section>
+
+  <section class="card mapcard" aria-label="Map of 2026 Senate races">
+    <div id="map"></div>
+    <p class="note" id="mapnote" hidden>The map couldn’t load here. Use the state list below to rate each seat. Everything else still works.</p>
+  </section>
+
+  <section class="card panel" aria-label="Rate the selected state">
+    <h2 id="pName">Pick a state</h2>
+    <p class="meta" id="pMeta">Tap a state on the map or in the list below.</p>
+    <div class="rates" id="rates"></div>
+    <div class="acts">
+      <button class="btn primary" id="nextBtn" type="button">Next unrated</button>
+      <button class="btn" id="clearBtn" type="button">Clear rating</button>
+    </div>
+  </section>
+
+  <section class="card counts" id="counts" aria-label="Ratings tally"></section>
+
+  <section class="card listcard" aria-label="All 35 races">
+    <h3>All 35 races</h3>
+    <p id="progress">0 of 35 rated</p>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <div class="foot">
+    <p>Seats not on the ballot: 34 held by Democrats (including 2 independents who caucus with them) and 31 held by Republicans. Democrats need 51 for control. Republicans keep it at 50 because the Vice President breaks ties.</p>
+    <p>Locked seats are set to Safe and can’t be changed. Unrated seats stay out of the totals. Your ratings save on this device.</p>
+    <button class="btn reset" id="resetBtn" type="button">Reset map</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datamaps/0.5.9/datamaps.usa.min.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var HOLD_D = 34, HOLD_R = 31, TOTAL = 35, STORE = 'senate-map-2026';
+
+  // name, party that holds the seat now, optional special-election flag
+  var STATES = {
+    AL:['Alabama','R'], AK:['Alaska','R'], AR:['Arkansas','R'], CO:['Colorado','D'],
+    DE:['Delaware','D'], FL:['Florida','R',1], GA:['Georgia','D'], ID:['Idaho','R'],
+    IL:['Illinois','D'], IA:['Iowa','R'], KS:['Kansas','R'], KY:['Kentucky','R'],
+    LA:['Louisiana','R'], ME:['Maine','R'], MA:['Massachusetts','D'], MI:['Michigan','D'],
+    MN:['Minnesota','D'], MS:['Mississippi','R'], MT:['Montana','R'], NE:['Nebraska','R'],
+    NH:['New Hampshire','D'], NJ:['New Jersey','D'], NM:['New Mexico','D'], NC:['North Carolina','R'],
+    OH:['Ohio','R',1], OK:['Oklahoma','R'], OR:['Oregon','D'], RI:['Rhode Island','D'],
+    SC:['South Carolina','R'], SD:['South Dakota','R'], TN:['Tennessee','R'], TX:['Texas','R'],
+    VA:['Virginia','D'], WV:['West Virginia','R'], WY:['Wyoming','R']
+  };
+
+  var RATINGS = [
+    {k:'sd', label:'Safe D',   tier:'Safe',   p:'D', color:'#1d4a93', ink:'#ffffff'},
+    {k:'ld', label:'Likely D', tier:'Likely', p:'D', color:'#3f73bb', ink:'#ffffff'},
+    {k:'nd', label:'Lean D',   tier:'Lean',   p:'D', color:'#8fb4e6', ink:'#0f2036'},
+    {k:'td', label:'Tilt D',   tier:'Tilt',   p:'D', color:'#c6d9f3', ink:'#0f2036'},
+    {k:'sr', label:'Safe R',   tier:'Safe',   p:'R', color:'#9c1f19', ink:'#ffffff'},
+    {k:'lr', label:'Likely R', tier:'Likely', p:'R', color:'#cb4a3f', ink:'#ffffff'},
+    {k:'nr', label:'Lean R',   tier:'Lean',   p:'R', color:'#ee9d94', ink:'#35100c'},
+    {k:'tr', label:'Tilt R',   tier:'Tilt',   p:'R', color:'#f7cfca', ink:'#35100c'}
+  ];
+  var RM = {};
+  RATINGS.forEach(function(r){ RM[r.k] = r; });
+
+  var ORDER = Object.keys(STATES).sort(function(a,b){ return STATES[a][0] < STATES[b][0] ? -1 : 1; });
+
+  // states locked in as Safe (can't be changed)
+  var LOCKED = {
+    ID:'sr', WY:'sr', SD:'sr', KY:'sr', WV:'sr', AR:'sr', TN:'sr', OK:'sr', AL:'sr',
+    OR:'sd', CO:'sd', NM:'sd', IL:'sd', VA:'sd', NJ:'sd', MA:'sd', DE:'sd', RI:'sd'
+  };
+  var LOCK_COUNT = Object.keys(LOCKED).length;
+  function applyLocks(){ Object.keys(LOCKED).forEach(function(c){ ratings[c] = LOCKED[c]; }); }
+
+  var ratings = {};   // code -> rating key
+  var sel = null;     // selected state code
+  var note = '';      // message when a non-race state is tapped
+  var armed = false, armTimer = null;
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function load(){
+    try{
+      var t = localStorage.getItem(STORE);
+      if(!t) return;
+      var o = JSON.parse(t);
+      Object.keys(o).forEach(function(c){
+        if(STATES[c] && RM[o[c]]) ratings[c] = o[c];
+      });
+    }catch(e){}
+  }
+  function save(){
+    try{ localStorage.setItem(STORE, JSON.stringify(ratings)); }catch(e){}
+  }
+
+  function colorOf(c){
+    if(ratings[c]) return RM[ratings[c]].color;
+    return STATES[c] ? 'var(--und)' : 'var(--none)';
+  }
+  function inkOf(c){
+    return ratings[c] ? RM[ratings[c]].ink : 'var(--ink)';
+  }
+
+  /* ---------- build static UI ---------- */
+  var rateBtns = {};
+  RATINGS.forEach(function(r){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rate';
+    b.textContent = r.label;
+    b.style.background = r.color;
+    b.style.color = r.ink;
+    b.setAttribute('aria-pressed','false');
+    b.addEventListener('click', function(){
+      if(!sel || LOCKED[sel]) return;
+      ratings[sel] = r.k;
+      save(); render();
+    });
+    $('rates').appendChild(b);
+    rateBtns[r.k] = b;
+  });
+
+  var chipBtns = {};
+  ORDER.forEach(function(c){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.textContent = c;
+    b.setAttribute('aria-label', STATES[c][0]);
+    b.setAttribute('aria-pressed','false');
+    b.addEventListener('click', function(){ pick(c); });
+    $('chips').appendChild(b);
+    chipBtns[c] = b;
+  });
+
+  var counts = $('counts');
+  (function(){
+    function span(cls, txt){ var s = document.createElement('span'); if(cls) s.className = cls; if(txt) s.textContent = txt; return s; }
+    counts.appendChild(span('',''));
+    ['Safe','Likely','Lean','Tilt'].forEach(function(t){ counts.appendChild(span('h', t)); });
+    ['D','R'].forEach(function(p){
+      counts.appendChild(span('rl', p === 'D' ? 'Dem' : 'GOP'));
+      RATINGS.filter(function(r){ return r.p === p; }).forEach(function(r){
+        var c = span('cell', '0');
+        c.id = 'cnt-' + r.k;
+        c.style.background = r.color;
+        c.style.color = r.ink;
+        c.setAttribute('title', r.label);
+        counts.appendChild(c);
+      });
+    });
+  })();
+
+  /* ---------- actions ---------- */
+  function pick(c){ sel = c; note = ''; render(); }
+
+  function nextUnrated(){
+    var start = sel ? ORDER.indexOf(sel) : -1;
+    for(var i = 1; i <= ORDER.length; i++){
+      var c = ORDER[(start + i + ORDER.length) % ORDER.length];
+      if(!ratings[c]){ pick(c); return; }
+    }
+  }
+
+  $('nextBtn').addEventListener('click', nextUnrated);
+  $('clearBtn').addEventListener('click', function(){
+    if(sel && !LOCKED[sel] && ratings[sel]){ delete ratings[sel]; save(); render(); }
+  });
+  $('resetBtn').addEventListener('click', function(){
+    var b = $('resetBtn');
+    if(!armed){
+      armed = true;
+      b.textContent = 'Tap again to clear your ratings';
+      armTimer = setTimeout(function(){ armed = false; b.textContent = 'Reset map'; }, 3500);
+      return;
+    }
+    clearTimeout(armTimer);
+    armed = false;
+    b.textContent = 'Reset map';
+    ratings = {}; applyLocks(); sel = null; note = '';
+    save(); render();
+  });
+
+  /* ---------- render ---------- */
+  function render(){
+    var D = HOLD_D, R = HOLD_R, rated = 0, tally = {};
+    RATINGS.forEach(function(r){ tally[r.k] = 0; });
+    Object.keys(ratings).forEach(function(c){
+      var r = RM[ratings[c]];
+      tally[r.k]++; rated++;
+      if(r.p === 'D') D++; else R++;
+    });
+    var unrated = TOTAL - rated;
+
+    $('dN').textContent = D;
+    $('rN').textContent = R;
+    $('barD').style.width = D + '%';
+    $('barR').style.width = R + '%';
+    $('barU').style.width = (100 - D - R) + '%';
+
+    var main, sub = '';
+    if(D >= 51){
+      main = 'Democrats control the Senate on your map';
+      sub = unrated ? unrated + ' seats still unrated' : 'Final count: ' + D + ' D, ' + R + ' R';
+    }else if(R >= 50){
+      main = (R === 50 && D === 50) ? 'Republicans hold the Senate on your map, 50 to 50 with the VP tiebreak' : 'Republicans control the Senate on your map';
+      sub = unrated ? unrated + ' seats still unrated' : 'Final count: ' + D + ' D, ' + R + ' R';
+    }else{
+      main = 'Control is still open on your map';
+      sub = 'Democrats need ' + (51 - D) + ' more. Republicans need ' + (50 - R) + ' more.';
+    }
+    $('ctl').textContent = main;
+    $('ctl2').textContent = sub;
+
+    RATINGS.forEach(function(r){ $('cnt-' + r.k).textContent = tally[r.k]; });
+    $('progress').textContent = rated + ' of ' + TOTAL + ' rated, including ' + LOCK_COUNT + ' locked as Safe (dashed outline)';
+
+    // panel
+    if(sel){
+      var s = STATES[sel];
+      $('pName').textContent = s[0];
+      var who = s[1] === 'D' ? 'Democrats' : 'Republicans';
+      var base = (s[2] ? 'Special election. ' : '') + 'Seat currently held by ' + who + '.';
+      var cur = LOCKED[sel] ? ' Locked in as ' + RM[LOCKED[sel]].label + '.' : (ratings[sel] ? ' Rated ' + RM[ratings[sel]].label + '.' : ' Not rated yet.');
+      $('pMeta').textContent = base + cur;
+    }else{
+      $('pName').textContent = note ? 'No race here' : 'Pick a state';
+      $('pMeta').textContent = note || 'Tap a state on the map or in the list below.';
+    }
+    RATINGS.forEach(function(r){
+      var b = rateBtns[r.k];
+      b.disabled = !sel || !!LOCKED[sel];
+      b.setAttribute('aria-pressed', sel && ratings[sel] === r.k ? 'true' : 'false');
+    });
+    $('clearBtn').disabled = !(sel && !LOCKED[sel] && ratings[sel]);
+    $('nextBtn').disabled = rated === TOTAL;
+
+    // chips
+    ORDER.forEach(function(c){
+      var b = chipBtns[c];
+      b.style.background = colorOf(c);
+      b.style.color = inkOf(c);
+      b.classList.toggle('locked', !!LOCKED[c]);
+      b.setAttribute('aria-pressed', c === sel ? 'true' : 'false');
+    });
+
+    paintMap();
+  }
+
+  /* ---------- map ---------- */
+  var mapReady = false, svg = null, paths = null, g = null, W = 360, H = 224, S = 1, holder = $('map');
+
+  function paintMap(){
+    if(!mapReady) return;
+    paths
+      .style('fill', function(d){ return colorOf(d.id); })
+      .style('stroke', function(d){ return d.id === sel ? 'var(--ink)' : 'var(--card)'; })
+      .style('stroke-width', function(d){ return d.id === sel ? '2.5px' : '1px'; })
+      .style('cursor', function(d){ return STATES[d.id] ? 'pointer' : 'default'; });
+    paths.each(function(d){ if(d.id === sel && this.parentNode) this.parentNode.appendChild(this); });
+    g.selectAll('text').style('fill', function(){ return inkOf(this.getAttribute('data-s')); });
+    g.selectAll('rect')
+      .style('fill', function(){ return colorOf(this.getAttribute('data-s')); })
+      .style('stroke', function(){ return this.getAttribute('data-s') === sel ? 'var(--ink)' : 'var(--line)'; })
+      .style('stroke-width', function(){ return (this.getAttribute('data-s') === sel ? 2 : 1) * S + 'px'; });
+  }
+
+  function setup(dm){
+    if(mapReady) return;
+    mapReady = true;
+    svg = dm.svg;
+    svg.attr('viewBox', '0 0 ' + W + ' ' + H)
+       .attr('preserveAspectRatio', 'xMidYMid meet')
+       .attr('width', null).attr('height', null)
+       .attr('role', 'img')
+       .attr('aria-label', 'Map of the 2026 U.S. Senate races');
+    svg.style('width', '100%').style('height', 'auto');
+    holder.style.height = 'auto';
+
+    paths = svg.selectAll('.datamaps-subunit');
+    var feats = {}, names = {};
+    paths.each(function(d){ feats[d.id] = d; names[d.id] = d.properties && d.properties.name; });
+
+    paths.on('click', function(d){
+      if(STATES[d.id]){ pick(d.id); }
+      else{ sel = null; note = 'There is no Senate race in ' + (names[d.id] || d.id) + ' this year.'; render(); }
+    });
+
+    g = svg.append('g').attr('class', 'lab');
+    var fs = (8.2 * S) + 'px';
+    var NE = {NH:64, MA:77, RI:90, NJ:103, DE:116};
+    var OFF = {MI:[3,10], FL:[9,2], ID:[2,6], LA:[-2,0]};
+
+    Object.keys(STATES).forEach(function(code){
+      var f = feats[code];
+      if(!f) return;
+      var c = dm.path.centroid(f);
+      if(NE[code] !== undefined){
+        var lx = 334 * S, ly = NE[code] * S, hw = 9 * S;
+        g.append('line')
+          .attr('x1', lx - hw).attr('y1', ly).attr('x2', c[0]).attr('y2', c[1])
+          .style('stroke', 'var(--muted)').style('stroke-width', '0.8px').style('pointer-events', 'none');
+        g.append('circle')
+          .attr('cx', c[0]).attr('cy', c[1]).attr('r', 1.2 * S)
+          .style('fill', 'var(--ink)').style('stroke', 'none').style('pointer-events', 'none');
+        g.append('rect').attr('class', 'ne').attr('data-s', code)
+          .attr('x', lx - hw).attr('y', ly - 5.5 * S).attr('width', 2 * hw).attr('height', 11 * S).attr('rx', 2 * S)
+          .on('click', function(){ pick(code); });
+        g.append('text').attr('data-s', code)
+          .attr('x', lx).attr('y', ly).attr('dy', '0.35em').style('font-size', fs).text(code);
+      }else{
+        var o = OFF[code] || [0, 0];
+        g.append('text').attr('data-s', code)
+          .attr('x', c[0] + o[0] * S).attr('y', c[1] + o[1] * S).attr('dy', '0.35em')
+          .style('font-size', fs).text(code);
+      }
+    });
+    paintMap();
+  }
+
+  function initMap(){
+    if(typeof Datamap === 'undefined' || typeof d3 === 'undefined' || typeof topojson === 'undefined'){
+      $('mapnote').hidden = false;
+      return;
+    }
+    W = Math.min(720, Math.max(280, holder.clientWidth || 360));
+    H = Math.round(W * 0.622);
+    S = W / 360;
+    holder.style.height = H + 'px';
+    try{
+      var dm = new Datamap({
+        element: holder,
+        scope: 'usa',
+        width: W,
+        height: H,
+        fills: { defaultFill: '#dde2e7' },
+        geographyConfig: { highlightOnHover: false, popupOnHover: false, borderWidth: 1, borderColor: '#ffffff' },
+        done: setup
+      });
+      setup(dm);
+    }catch(e){
+      holder.style.height = 'auto';
+      $('mapnote').hidden = false;
+    }
+  }
+
+  load();
+  applyLocks();
+  initMap();
+  render();
+})();
+</script>
+</body>
+</html>
